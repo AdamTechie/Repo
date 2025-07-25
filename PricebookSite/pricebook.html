@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SecurITon Vendor Pricebook (Supabase Cloud)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fa; margin: 0; }
+    .topbar {display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 2.3vw; background: #fff;box-shadow: 0 4px 16px rgba(34,55,80,0.07);border-radius: 0 0 18px 18px;max-width: 1550px;margin: 0 auto; width: 99vw; min-width: 320px;}
+    .topbar-title { font-size: 1.3rem; font-weight: 600; color: #0b3168; display: flex; align-items: center; gap: 0.65rem;}
+    .logo-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #e0e7ef;
+      object-fit: contain;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.22em;
+      box-shadow: 0 2px 8px rgba(34,55,80,0.08);
+      border: 1.2px solid #dde6f4;
+    }
+    .beta-pill {
+      display: inline-block;
+      font-size: 0.91rem;
+      font-weight: 700;
+      color: #fff;
+      background: #f6b41d;
+      border-radius: 7px;
+      padding: 0.17em 0.8em 0.13em 0.8em;
+      margin-left: 0.7em;
+      letter-spacing: 0.06em;
+      border: 1.2px solid #f6b41d;
+      vertical-align: middle;
+      text-transform: uppercase;
+      box-shadow: none;
+    }
+    .app-version {
+      margin-left: 1.4em;
+      font-size: 0.92em;
+      color: #71829b;
+      font-weight: 500;
+      background: #f0f3fa;
+      border-radius: 8px;
+      padding: 0.1em 0.65em 0.08em 0.7em;
+      letter-spacing: 0.02em;
+      user-select: text;
+    }
+    .topbar-btns {
+      display: flex;
+      align-items: center;
+    }
+    .topbar-btns button {
+      font-size: 1rem; font-weight: 500; border: none; border-radius: 6px;
+      padding: 0.6rem 1.3rem; margin-left: 0.8rem;
+      background: #eef2fb;
+      color: #274490; cursor: pointer;
+      transition: background 0.17s, transform 0.1s;
+      box-shadow: none;
+    }
+    .topbar-btns button:hover { background: #dbe8fc; }
+    .melb-clock {
+      font-size: 0.97em;
+      font-weight: 500;
+      color: #2d4252;
+      background: #eef2f7;
+      border-radius: 6px;
+      padding: 0.28em 0.8em 0.25em 1em;
+      margin-right: 1.0em;
+      letter-spacing: 0.01em;
+      box-shadow: none;
+      display: inline-block;
+      vertical-align: middle;
+      min-width: 180px;
+      border: 1px solid #dbe4ef;
+    }
+    @media (max-width:600px){.melb-clock{font-size:0.92em;padding:0.15em 0.4em;min-width:130px;}}
+    .main-card { background: #fff; border-radius: 18px; box-shadow: 0 8px 28px rgba(34, 55, 80, 0.13); padding: 2.2rem 2vw 2rem 2vw; max-width: 1550px; width: 99vw; min-width: 340px; margin: 2.3rem auto 0 auto; display: flex; flex-direction: column; gap: 2.2rem; }
+    .section-title { font-size: 1.22rem; color: #0b3168; font-weight: 500; margin-bottom: 1.1rem;}
+    .controls { display: flex; flex-wrap: wrap; gap: 1.15rem; margin-bottom: 1.2rem; align-items: center; justify-content: space-between;}
+    .controls input[type="file"] { display: none; }
+    .search-box { flex: 1; min-width: 130px; max-width: 280px; font-size: 1rem; padding: 0.62rem 0.9rem; border: 1px solid #c3c7d4; border-radius: 6px; background: #f9fafb; margin-right: 0.7rem;}
+    .controls button { font-size: 1rem; border: none; border-radius: 6px; padding: 0.7rem 1.3rem; background: #eef2fb; color: #274490; font-weight: 500; cursor: pointer; transition: background 0.16s, color 0.16s; margin-left: 0.17rem; box-shadow: none;}
+    .controls button:hover { background: #dbe8fc; }
+    .filter-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.3rem;}
+    .filter-row select { padding: 0.43rem 0.8rem; border: 1px solid #c3c7d4; border-radius: 6px; font-size: 1rem; min-width: 110px; background: #f7fafb; color: #1e3a6e;}
+    .clear-btn {
+      background: #f5dca6 !important;
+      color: #744900 !important;
+      border: none !important;
+      font-weight: 600;
+      box-shadow: none;
+      border-radius: 7px !important;
+      font-size: 1.01em;
+      padding: 0.49rem 1.4rem !important;
+      margin-left: 0.7em !important;
+      transition: background 0.14s, color 0.14s;
+    }
+    .clear-btn:hover { background: #ffe6be !important; color: #997a29 !important;}
+    .dashboard-cards {display: flex; gap: 2em; margin-bottom:2.2em; flex-wrap:wrap;}
+    .dashboard-card {flex:1 1 200px; background: #f3f8ff; border-radius: 12px; padding: 1.35em 2em 1.3em 2em; box-shadow:0 2px 16px rgba(33,64,155,0.06); color: #15509c; font-size: 1.15em; font-weight: 500; min-width:190px;display:flex; flex-direction:column; gap:0.12em; align-items:flex-start;}
+    .dashboard-card-title {font-size:0.99em;color:#4170c2;font-weight:600;margin-bottom:0.1em;}
+    .dashboard-card-main {font-size:1.36em;font-weight:700;}
+    .dashboard-card-desc {font-size:0.97em;color:#7b88a5;}
+    .supplier-analytics {margin-bottom:1.8em;}
+    .supplier-table {width:100%;border-collapse:collapse;}
+    .supplier-table th,.supplier-table td{border:1px solid #e2e6f2;padding:0.45em 0.95em;}
+    .supplier-table th{background:#e5edfa;color:#15509c;font-weight:600;}
+    .pricebook-form { display: flex; gap: 1.3rem; margin-bottom: 0.5rem; flex-wrap: wrap; align-items: center;}
+    .pricebook-form input { font-size: 1rem; padding: 0.56rem 1rem; border: 1px solid #c3c7d4; border-radius: 6px; outline: none; background: #f9fafb; min-width: 90px; margin-bottom: 0.1rem; transition: border 0.18s;}
+    .pricebook-form input:focus { border: 2px solid #2563eb; background: #e8f2ff;}
+    .pricebook-form input#service { min-width: 350px; flex:2.8; }
+    .pricebook-form input#supplier { min-width: 180px; flex:1.7; }
+    .pricebook-form input#vendorcost, .pricebook-form input#margin { max-width: 125px; flex:0.7;}
+    .pricebook-form button { background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: 500; font-size: 1rem; padding: 0.54rem 1.6rem; transition: background 0.16s, transform 0.1s; cursor: pointer; margin-top: 0.15rem;}
+    .pricebook-form button:hover { background: #173ea6; }
+    .live-preview { margin: 0 0 1.05rem 0; padding: 0.92rem 1.2rem; background: #e8f1ff; border-radius: 10px; color: #1e3a6e; font-size: 1.07rem; box-shadow: 0 2px 10px rgba(38,60,122,0.06); display: inline-block;}
+    .live-preview span { display: inline-block; margin-right: 2.6em; font-weight: 500;}
+    .pricing-calc-section {
+      margin-bottom: 2.4em;
+      padding: 1.6em 2em;
+      border-radius: 13px;
+      background: #f9fafc;
+      box-shadow: 0 4px 18px rgba(37,70,123,0.07);
+      max-width: 660px;
+      margin-left: auto; margin-right: auto;
+      border: 1.2px solid #e5ecfb;
+      display: flex; flex-direction: column; gap: 1.5em;
+    }
+    .pricing-calc-title {
+      font-size: 1.18em; font-weight: 600; color: #173771; margin-bottom: 0.8em; display:flex; gap:0.5em; align-items:center;
+    }
+    .pricing-calc-form { display: flex; flex-wrap: wrap; gap: 1.3em; align-items: center; }
+    .pricing-calc-form select, .pricing-calc-form input {
+      font-size: 1.03em; border-radius: 7px; border: 1.2px solid #bfd5f3;
+      background: #f5fafd; padding: 0.51em 1.2em; min-width: 150px; margin-bottom: 0.13em;
+      box-shadow: none;
+    }
+    .pricing-calc-form input[type="number"] { width: 110px; }
+    .pricing-calc-form #resetCalcBtn {
+      background: #fde2e2; color: #a11a1a; border:1px solid #ffdcdc; font-weight:600;
+      transition: background 0.18s, color 0.14s;
+    }
+    .pricing-calc-form #resetCalcBtn:hover {
+      background: #fcd1d1; color: #ad2525; border:1.2px solid #efb0b0;
+    }
+    .pricing-calc-results {
+      display: flex; flex-wrap: wrap; gap: 2.2em; margin-top: 1.2em;
+    }
+    .pricing-calc-result {
+      background: #e8f1ff;
+      border-radius: 8px;
+      padding: 0.6em 1.5em;
+      font-size: 1.07em;
+      color: #15326e;
+      font-weight: 500;
+      min-width: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 0.2em;
+      border: 1.2px solid #c5d7f3;
+      box-shadow: none;
+    }
+    .calc-profit-green {
+      background: #e7f9ed !important;
+      color: #177a3c !important;
+      border: 1.2px solid #b5eec7 !important;
+      font-weight: 600;
+    }
+    .pricing-indicative {
+      color: #aa8911;
+      background: #f7eab8;
+      font-size: 0.97em;
+      padding: 0.32em 1.1em;
+      border-radius: 9px;
+      display: inline-block;
+      margin-left: 0.8em;
+      font-weight: 600;
+    }
+    #calcMeta {
+      font-size: 0.98em;
+      color: #5f5f5f;
+      margin:0.4em 0 0.7em 0;
+      display:none;
+    }
+    .table-container {width: 100%; overflow-x: auto; background: transparent; border-radius: 13px; box-sizing: border-box;}
+    table {
+      min-width: 1200px;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.98rem;
+      margin-bottom: 1.3rem;
+      margin-top: 0.6rem;
+      background: #f7f8fa;
+      border-radius: 13px;
+      overflow: auto;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    th, td {
+      padding: 0.65rem 0.82rem;
+      border-bottom: 1.5px solid #e7eaf1;
+      text-align: left;
+      font-size: 0.98rem;
+      white-space: nowrap;
+      max-width: 330px;
+    }
+    th {
+      background: #e5edfa;
+      color: #1e40af;
+      font-weight: 600;
+      font-size: 1.02rem;
+      letter-spacing: 0.03em;
+      border-bottom: 2px solid #ced8ec;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    th .sort-arrow {
+      font-size: 1.1em;
+      color: #969ba2;
+      margin-left: 0.25em;
+      position: absolute;
+      right: 12px;
+      top: 49%;
+      transform: translateY(-45%);
+    }
+    #pricebook td:first-child {
+      white-space: normal !important;
+      word-break: break-word;
+      max-width: 340px;
+    }
+    tr:last-child td { border-bottom: none; }
+    .action-btn {color: #2563eb; background: none; border: none; cursor: pointer; font-weight: 500; padding: 0.23rem 0.85rem 0.23rem 0.38rem; border-radius: 5px; transition: background 0.15s; font-size: 1.08rem;}
+    .action-btn:hover {background: #e3e9f7;}
+    #errorLog {max-width:700px;margin:1.5em auto 0 auto;background:#fffbe9;color:#c0392b;border:1.5px solid #ffe2a2;border-radius:7px;padding:1em 1.2em 0.5em 1.2em;display:none;font-size:1.08em;}
+    #errorLogList {margin-top:0.6em;margin-bottom:0.6em;padding-left:1.4em;}
+    .highlight-search {
+      background: #ffe09d;
+      color: #b25600;
+      font-weight: 700;
+      border-radius: 3px;
+      padding: 0 2px;
+      box-decoration-break: clone;
+    }
+    @media (max-width: 950px) {.dashboard-cards {gap: 0.7em;}.dashboard-card {padding:0.8em 1em;}.main-card { padding: 1.1rem 1vw 1rem 1vw;}table, th, td { font-size: 0.95rem; }}
+    @media (max-width: 700px){.dashboard-cards{flex-direction:column;}.dashboard-card{min-width:0;}.main-card{min-width:0;}}
+    @media (max-width:600px){.main-card { padding: 0.5rem 0.1rem 0.5rem 0.1rem; }.pricebook-form { flex-direction: column; gap: 0.7rem; }.filter-row { flex-direction: column; gap: 0.5rem; }th, td { padding: 0.5rem 0.19rem; }.chart-container{padding:0.6em;}table{min-width:600px;}}
+  </style>
+</head>
+<body>
+  <div class="topbar" role="banner">
+    <div class="topbar-title">
+      <img src="https://ssasignature.blob.core.windows.net/img/logo.png" alt="SecurITon Logo" class="logo-img" />
+      SecurITon Vendor Pricebook
+      <span class="beta-pill" aria-label="Beta">BETA</span>
+      <span class="app-version" aria-label="App Version">v1.0.0.004</span>
+    </div>
+    <div class="topbar-btns">
+      <span id="melbTime" class="melb-clock" aria-label="Melbourne Date and Time"></span>
+      <button onclick="window.location='index.html'" aria-label="Home">Home</button>
+      <button onclick="logout()" aria-label="Logout">Logout</button>
+    </div>
+  </div>
+  <div class="main-card">
+    <div class="dashboard-cards" id="dashboardCards"></div>
+    <div class="supplier-analytics">
+      <div style="font-weight:600;color:#274490;margin-bottom:0.7em;">Supplier Analytics</div>
+      <table class="supplier-table" id="supplierTable">
+        <thead><tr><th>Supplier</th><th>Service Count</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="pricing-calc-section" id="pricingCalcSection" style="display:none;">
+      <div class="pricing-calc-title">
+        Quick Pricing Calculator
+        <span class="pricing-indicative">Indicative Only</span>
+      </div>
+      <form class="pricing-calc-form" id="pricingCalcForm" autocomplete="off" onsubmit="return false;">
+        <select id="calcService" required aria-label="Select Service">
+          <option value="">Select Service</option>
+        </select>
+        <input type="number" id="calcQty" min="1" step="1" value="1" required aria-label="Quantity">
+        <button type="button" id="resetCalcBtn" style="margin-left: 1em;">Reset</button>
+      </form>
+      <div id="calcMeta">
+        <span id="metaService"></span>
+        <span id="metaQty" style="margin-left:2em;"></span>
+      </div>
+      <div class="pricing-calc-results" id="pricingCalcResults" style="display:none;">
+        <div class="pricing-calc-result">Vendor Cost: <b id="calcVendor"></b></div>
+        <div class="pricing-calc-result">Sub-total (ex GST): <b id="calcSub"></b></div>
+        <div class="pricing-calc-result">Total (inc GST): <b id="calcTot"></b></div>
+        <div class="pricing-calc-result calc-profit-green">Profit: <b id="calcProfit"></b></div>
+      </div>
+      <div style="font-size:0.98em;color:#a28a23;margin-top:0.3em;">
+        Use this to provide customers a rapid, indicative quote. For formal quotations, use official documentation.
+      </div>
+    </div>
+    <div class="section-title">Manage Supplier Prices</div>
+    <div class="note">All data is now stored securely in the cloud via Supabase. <span style="color:#e08a16">(Security: Your data is encrypted and centrally managed. You can access it from any device!)</span></div>
+    <div class="filter-row">
+      <select id="supplierFilter"><option value="">All Suppliers</option></select>
+      <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
+    </div>
+    <div class="controls">
+      <input id="search" class="search-box" placeholder="Search..." aria-label="Search pricebook">
+      <div>
+        <input type="file" id="importFile" accept=".json,.csv"/>
+        <button onclick="document.getElementById('importFile').click()" aria-label="Import">Import CSV/JSON</button>
+        <button onclick="exportData('json')" aria-label="Export JSON">Export JSON</button>
+        <button onclick="exportData('csv')" aria-label="Export CSV">Export CSV</button>
+      </div>
+    </div>
+    <form id="addForm" class="pricebook-form" autocomplete="off" aria-label="Add or update pricebook entry">
+      <input id="service" placeholder="Service" required aria-label="Service">
+      <input id="supplier" placeholder="Supplier" required aria-label="Supplier">
+      <input id="vendorcost" type="number" min="0" step="0.01" placeholder="Vendor Cost" required aria-label="Vendor cost">
+      <input id="margin" type="number" min="0" max="100" step="0.01" placeholder="Margin %" required aria-label="Margin percent">
+      <button>Add / Update</button>
+    </form>
+    <div id="livePreview" class="live-preview" style="display:none;">
+      <span>Sub-total (ex GST): <b id="prevSub"></b></span>
+      <span>Total (inc GST): <b id="prevTot"></b></span>
+      <span>Profit: <b id="prevProfit"></b></span>
+    </div>
+    <div class="table-container">
+      <table id="dataTable" aria-label="Pricebook Table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('service')">Service <span class="sort-arrow" id="sort-service"></span></th>
+            <th onclick="sortTable('supplier')">Supplier <span class="sort-arrow" id="sort-supplier"></span></th>
+            <th onclick="sortTable('vendorcost')">Vendor Cost <span class="sort-arrow" id="sort-vendorcost"></span></th>
+            <th onclick="sortTable('margin')">Margin (%) <span class="sort-arrow" id="sort-margin"></span></th>
+            <th>Sub-total (ex GST)</th>
+            <th>Total (inc GST)</th>
+            <th>Profit ($)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="pricebook"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="errorLog">
+    <b>Error Log</b>
+    <ul id="errorLogList"></ul>
+  </div>
+  <script>
+    function updateMelbTime() {
+      const opts = {
+        timeZone: 'Australia/Melbourne',
+        weekday: 'short',
+        year: '2-digit', month: 'short', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      };
+      const now = new Date();
+      let melbNow = now.toLocaleString('en-AU', opts);
+      melbNow = melbNow
+        .replace(/^([A-Za-z]+),?\s?(\d{2}) ([A-Za-z]{3}) (\d{2}),?/, '$1 $2/$3/$4')
+        .replace(',', ' -');
+      document.getElementById('melbTime').textContent = melbNow;
+    }
+    setInterval(updateMelbTime, 1000); updateMelbTime();
+    const SUPABASE_URL = "https://kzbqmgqlgcrooqjbpkyv.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6YnFtZ3FsZ2Nyb29xamJwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0MDc2MzIsImV4cCI6MjA2ODk4MzYzMn0.Jqeb1x8XFdeWc3xGdMR6In_GAjJdXRsTxLN4TDxgO1E";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const Storage = {
+      async getAll() {
+        let { data, error } = await supabaseClient.from('pricebook').select('*').order('service');
+        if (error) { logError("Failed to load pricebook: " + error.message); return []; }
+        return data;
+      },
+      async addRow(row) {
+        let { data: existing, error: selErr } = await supabaseClient
+          .from('pricebook')
+          .select('id')
+          .eq('service', row.service)
+          .eq('supplier', row.supplier)
+          .maybeSingle();
+        if (selErr) { logError("Supabase SELECT error: " + selErr.message); return { error: selErr }; }
+        if (existing) {
+          let { error: updErr, data: updData } = await supabaseClient
+            .from('pricebook')
+            .update(row)
+            .eq('id', existing.id);
+          if (updErr) { logError("Supabase UPDATE error: " + updErr.message); return { error: updErr }; }
+          return { data: updData };
+        } else {
+          let { error: insErr, data: insData } = await supabaseClient
+            .from('pricebook')
+            .insert([row]);
+          if (insErr) { logError("Supabase INSERT error: " + insErr.message); return { error: insErr }; }
+          return { data: insData };
+        }
+      },
+      async updateRow(id, row) {
+        let { error, data } = await supabaseClient.from('pricebook').update(row).eq('id', id);
+        if (error) { logError("Supabase UPDATE error: " + error.message); return { error }; }
+        return { data };
+      },
+      async deleteRow(id) {
+        let { error } = await supabaseClient.from('pricebook').delete().eq('id', id);
+        if (error) { logError("Supabase DELETE error: " + error.message); }
+      },
+      async saveBulk(rows) {
+        for (let row of rows) await Storage.addRow(row);
+      }
+    };
+    function calcMarginDollars(vendorcost, margin) { return (Number(vendorcost) * Number(margin) / 100); }
+    function calcSubTotal(vendorcost, margin) { return Number(vendorcost) + calcMarginDollars(vendorcost, margin); }
+    function calcTotal(subtotal) { return Number(subtotal) * 1.1; }
+    function calcProfit(subtotal, vendorcost) { return Number(subtotal) - Number(vendorcost); }
+    function logout() { window.location = 'index.html'; }
+    function logError(msg) {
+      const el = document.getElementById('errorLog');
+      const ul = document.getElementById('errorLogList');
+      el.style.display = '';
+      const li = document.createElement('li');
+      li.textContent = msg;
+      ul.appendChild(li);
+      if (ul.children.length > 8) ul.removeChild(ul.children[0]);
+      setTimeout(() => {
+        li.style.opacity = 0.2;
+        setTimeout(() => { try { li.remove(); } catch { } }, 800);
+        if (ul.children.length === 0) el.style.display = 'none';
+      }, 25000);
+    }
+    function escapeHTML(str) { if (typeof str !== 'string') return str; return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]); }
+    function sanitize(str) { return escapeHTML(str); }
+    function highlightSearch(text, term) {
+      if (!term) return escapeHTML(text);
+      const re = new RegExp("(" + term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ")", "gi");
+      return escapeHTML(text).replace(re, '<span class="highlight-search">$1</span>');
+    }
+    async function exportData(type) {
+      const data = await Storage.getAll();
+      if (type === 'json') {
+        const dataToExport = data.map(row => ({
+          ...row,
+          subtotal: calcSubTotal(row.vendorcost, row.margin),
+          total: calcTotal(calcSubTotal(row.vendorcost, row.margin)),
+          profit: calcProfit(calcSubTotal(row.vendorcost, row.margin), row.vendorcost)
+        }));
+        const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
+        downloadBlob(blob, "pricebook.json");
+      } else if (type === 'csv') {
+        const header = "service,supplier,vendorcost,margin,subtotal,total,profit\n";
+        const rows = data.map(row => {
+          const subtotal = calcSubTotal(row.vendorcost, row.margin);
+          const total = calcTotal(subtotal);
+          const profit = calcProfit(subtotal, row.vendorcost);
+          return [
+            `"${row.service || ''}"`,
+            `"${row.supplier || ''}"`,
+            `"${Number(row.vendorcost) || 0}"`,
+            `"${Number(row.margin) || 0}"`,
+            `"${subtotal.toFixed(2)}"`,
+            `"${total.toFixed(2)}"`,
+            `"${profit.toFixed(2)}"`
+          ].join(",");
+        }).join("\n");
+        const blob = new Blob([header + rows], { type: "text/csv" });
+        downloadBlob(blob, "pricebook.csv");
+      }
+    }
+    function downloadBlob(blob, filename) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+    function csvToArray(csv) {
+      const parsed = Papa.parse(csv, {
+        header: true,
+        skipEmptyLines: true
+      });
+      if (parsed.errors && parsed.errors.length > 0) {
+        logError("CSV parsing error: " + parsed.errors[0].message);
+        return [];
+      }
+      return parsed.data.map(row => ({
+        service: row.service?.trim() || '',
+        supplier: row.supplier?.trim() || '',
+        vendorcost: parseFloat(row.vendorcost) || 0,
+        margin: parseFloat(row.margin) || 0
+      }));
+    }
+    document.getElementById('importFile').addEventListener('change', async function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function (event) {
+        try {
+          let imported = [];
+          if (file.name.endsWith('.json')) {
+            imported = JSON.parse(event.target.result);
+            if (!Array.isArray(imported)) throw 'Invalid JSON structure (should be array)';
+            imported = imported.map(row => ({
+              service: row.service || '',
+              supplier: row.supplier || '',
+              vendorcost: Number(row.vendorcost) || 0,
+              margin: Number(row.margin) || 0
+            }));
+          } else if (file.name.endsWith('.csv')) {
+            imported = csvToArray(event.target.result);
+            if (!Array.isArray(imported) || imported.length === 0) throw 'CSV appears empty or malformed';
+          } else {
+            throw 'Unsupported file type for import.';
+          }
+          if (imported.length === 0) {
+            logError('Import found zero valid rows.');
+            return;
+          }
+          await Storage.saveBulk(imported);
+          render();
+          alert(`Import complete: ${imported.length} imported.`);
+        } catch (err) {
+          logError(`Import error: ${err.message || err.toString()}`);
+        }
+      };
+      reader.onerror = function () {
+        logError('Could not read the file. Check file permissions and try again.');
+      };
+      try { reader.readAsText(file); }
+      catch (err) { logError('Failed to start import: ' + (err.message || err.toString())); }
+      e.target.value = "";
+    });
+    let sortBy = null, sortDir = 1, editId = null, latestPricebook = [];
+    function sortTable(col) {
+      if (sortBy === col) sortDir *= -1; else { sortBy = col; sortDir = 1; }
+      render();
+      document.querySelectorAll('.sort-arrow').forEach(el => el.textContent = '');
+      let arrow = sortDir === 1 ? '▲' : '▼';
+      let el = document.getElementById('sort-' + col);
+      if (el) el.textContent = arrow;
+    }
+    function clearFilters() {
+      document.getElementById('supplierFilter').value = '';
+      document.getElementById('search').value = '';
+      render();
+    }
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('supplierFilter').addEventListener('change', render);
+    document.getElementById('addForm').onsubmit = async function (e) {
+      e.preventDefault();
+      const service = sanitize(document.getElementById('service').value.trim());
+      const supplier = sanitize(document.getElementById('supplier').value.trim());
+      const vendorcost = parseFloat(document.getElementById('vendorcost').value);
+      const margin = parseFloat(document.getElementById('margin').value) || 0;
+      if (!service || !supplier || isNaN(vendorcost)) return;
+      let row = { service, supplier, vendorcost, margin };
+      let result;
+      if (editId) {
+        result = await Storage.updateRow(editId, row);
+        editId = null;
+      } else {
+        result = await Storage.addRow(row);
+      }
+      if (result && result.error) {
+        logError("Error adding/updating row: " + result.error.message);
+      } else {
+        this.reset();
+        updatePreview();
+        render();
+      }
+    };
+    window.editRow = async function (id) {
+      const data = await Storage.getAll();
+      const row = data.find(r => r.id === id);
+      document.getElementById('service').value = row.service;
+      document.getElementById('supplier').value = row.supplier;
+      document.getElementById('vendorcost').value = row.vendorcost;
+      document.getElementById('margin').value = row.margin;
+      editId = id;
+      document.getElementById('service').focus();
+      updatePreview();
+    };
+    window.deleteRow = async function (id) {
+      if (confirm('Delete this entry?')) {
+        await Storage.deleteRow(id);
+        render();
+      }
+    };
+    ['vendorcost', 'margin'].forEach(id => { document.getElementById(id).addEventListener('input', updatePreview); });
+    function updatePreview() {
+      const vendorcost = parseFloat(document.getElementById('vendorcost').value);
+      const margin = parseFloat(document.getElementById('margin').value);
+      const live = document.getElementById('livePreview');
+      if (!isNaN(vendorcost) && !isNaN(margin)) {
+        const subtotal = calcSubTotal(vendorcost, margin);
+        const tot = calcTotal(subtotal);
+        const profit = calcProfit(subtotal, vendorcost);
+        document.getElementById('prevSub').textContent = subtotal.toFixed(2);
+        document.getElementById('prevTot').textContent = tot.toFixed(2);
+        document.getElementById('prevProfit').textContent = profit.toFixed(2);
+        live.style.display = '';
+      } else { live.style.display = 'none'; }
+    }
+    async function updateSupplierFilter() {
+      const suppliers = Array.from(new Set((await Storage.getAll()).map(x => x.supplier).filter(Boolean))).sort();
+      const sel = document.getElementById('supplierFilter');
+      const current = sel.value;
+      sel.innerHTML = '<option value="">All Suppliers</option>' + suppliers.map(s => `<option>${escapeHTML(s)}</option>`).join('');
+      // Stick selection if still present, else "All Suppliers"
+      sel.value = suppliers.includes(current) ? current : '';
+    }
+    async function updateDashboard() {
+      let data = await Storage.getAll();
+      let uniqueSuppliers = new Set(), uniqueServices = new Set();
+      data.forEach(row => {
+        uniqueSuppliers.add(row.supplier);
+        uniqueServices.add(row.service);
+      });
+      document.getElementById('dashboardCards').innerHTML = `
+        <div class="dashboard-card">
+          <div class="dashboard-card-title">Suppliers</div>
+          <div class="dashboard-card-main">${uniqueSuppliers.size}</div>
+          <div class="dashboard-card-desc">${[...uniqueSuppliers].slice(0, 3).join(', ')}${uniqueSuppliers.size > 3 ? ', ...' : ''}</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-title">Services</div>
+          <div class="dashboard-card-main">${uniqueServices.size}</div>
+        </div>
+      `;
+    }
+    async function updateAnalytics() {
+      let data = await Storage.getAll();
+      let stats = {};
+      data.forEach(row => {
+        let s = row.supplier || 'N/A';
+        if (!stats[s]) stats[s] = { count: 0 };
+        stats[s].count++;
+      });
+      let tbody = document.querySelector('#supplierTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(stats).sort((a, b) => b[1].count - a[1].count).forEach(([sup, obj]) => {
+        tbody.innerHTML += `<tr><td>${escapeHTML(sup)}</td><td>${obj.count}</td></tr>`;
+      });
+    }
+    async function render() {
+      let data = await Storage.getAll();
+      latestPricebook = data;
+      let search = document.getElementById('search').value.trim().toLowerCase();
+      let sF = document.getElementById('supplierFilter').value.trim();
+      if (search) {
+        data = data.filter(row =>
+          Object.values(row).some(val =>
+            (val + "").toLowerCase().includes(search)
+          )
+        );
+      } else if (sF) {
+        data = data.filter(x => x.supplier === sF);
+      }
+      if (sortBy) {
+        data = [...data].sort((a, b) => {
+          let x = a[sortBy], y = b[sortBy];
+          if (typeof x === "string") return x.localeCompare(y) * sortDir;
+          return ((x || 0) - (y || 0)) * sortDir;
+        });
+      }
+      let html = '';
+      for (let row of data) {
+        let rowVals = {
+          service: row.service,
+          supplier: row.supplier,
+          vendorcost: "$" + Number(row.vendorcost).toFixed(2),
+          margin: Number(row.margin).toFixed(2) + "%",
+          subtotal: "$" + calcSubTotal(row.vendorcost, row.margin).toFixed(2),
+          total: "$" + calcTotal(calcSubTotal(row.vendorcost, row.margin)).toFixed(2),
+          profit: "$" + calcProfit(calcSubTotal(row.vendorcost, row.margin), row.vendorcost).toFixed(2)
+        };
+        html += `<tr>
+          <td>${highlightSearch(rowVals.service, search)}</td>
+          <td>${highlightSearch(rowVals.supplier, search)}</td>
+          <td>${highlightSearch(rowVals.vendorcost, search)}</td>
+          <td>${highlightSearch(rowVals.margin, search)}</td>
+          <td>${highlightSearch(rowVals.subtotal, search)}</td>
+          <td>${highlightSearch(rowVals.total, search)}</td>
+          <td>${highlightSearch(rowVals.profit, search)}</td>
+          <td>
+            <button class="action-btn" onclick="editRow('${row.id}')">Edit</button>
+            <button class="action-btn" onclick="deleteRow('${row.id}')">Delete</button>
+          </td>
+        </tr>`;
+      }
+      document.getElementById('pricebook').innerHTML = html;
+      await updateSupplierFilter();
+      await updateDashboard();
+      await updateAnalytics();
+      await updatePricingCalcUI();
+      PricingCalcModule.init();
+    }
+    async function updatePricingCalcUI() {
+      const calcSection = document.getElementById('pricingCalcSection');
+      if (!latestPricebook.length) { calcSection.style.display = "none"; return; }
+      calcSection.style.display = "";
+      const sel = document.getElementById('calcService');
+      const currentQty = document.getElementById('calcQty').value;
+      const currentService = sel.value;
+      sel.innerHTML = `<option value="">Select Service</option>` +
+        latestPricebook.map((row, idx) =>
+          `<option value="${idx}" ${currentService == idx ? "selected" : ""}>
+            ${escapeHTML(row.service)} (${escapeHTML(row.supplier)})
+          </option>`
+        ).join('');
+      sel.value = currentService;
+      document.getElementById('calcQty').value = currentQty;
+    }
+    const PricingCalcModule = {
+      reset() {
+        document.getElementById('calcService').value = '';
+        document.getElementById('calcQty').value = '1';
+        document.getElementById('pricingCalcResults').style.display = 'none';
+        document.getElementById('calcMeta').style.display = 'none';
+      },
+      init() {
+        document.getElementById('resetCalcBtn').onclick = PricingCalcModule.reset;
+        document.getElementById('calcService').onchange = doPricingCalc;
+        document.getElementById('calcQty').oninput = doPricingCalc;
+      }
+    };
+    function doPricingCalc() {
+      const idx = document.getElementById('calcService').value;
+      const qty = parseInt(document.getElementById('calcQty').value) || 1;
+      const resultsDiv = document.getElementById('pricingCalcResults');
+      const metaDiv = document.getElementById('calcMeta');
+      if (idx === "" || !latestPricebook[idx]) {
+        resultsDiv.style.display = "none";
+        metaDiv.style.display = "none";
+        return;
+      }
+      const row = latestPricebook[idx];
+      const vendorcost = (Number(row.vendorcost) || 0) * qty;
+      const subtotal = calcSubTotal(row.vendorcost, row.margin) * qty;
+      const total = calcTotal(calcSubTotal(row.vendorcost, row.margin)) * qty;
+      const profit = calcProfit(calcSubTotal(row.vendorcost, row.margin), row.vendorcost) * qty;
+      document.getElementById('calcVendor').textContent = "$" + vendorcost.toFixed(2);
+      document.getElementById('calcSub').textContent = "$" + subtotal.toFixed(2);
+      document.getElementById('calcTot').textContent = "$" + total.toFixed(2);
+      document.getElementById('calcProfit').textContent = "$" + profit.toFixed(2);
+      document.getElementById('metaService').textContent = `Service: ${row.service} (${row.supplier})`;
+      document.getElementById('metaQty').textContent = `Qty: ${qty}`;
+      metaDiv.style.display = "";
+      resultsDiv.style.display = "";
+    }
+    render();
+    updatePreview();
+  </script>
+</body>
+</html>
