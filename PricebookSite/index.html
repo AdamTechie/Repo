@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SecurITon Vendor Pricebook - Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #f5f7fa;
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 28px rgba(34, 55, 80, 0.14);
+      padding: 2.5rem 2rem 2rem 2rem;
+      text-align: center;
+      margin-top: 8vh;
+      min-width: 300px;
+      max-width: 360px;
+    }
+    .app-title {
+      font-size: 1.7rem;
+      font-weight: 600;
+      color: #0b3168;
+      margin-bottom: 1.4rem;
+      letter-spacing: 0.5px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      color: #64748b;
+      margin-bottom: 1.8rem;
+    }
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.04em;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      margin-top: 1.05em;
+      margin-bottom: 0.5rem;
+      padding: 0.8rem 0;
+      width: 100%;
+      gap: 0.6em;
+      cursor: pointer;
+      background: #24292f;
+      color: #fff;
+      transition: background 0.13s;
+    }
+    .oauth-btn.microsoft {
+      background: #2152a3;
+      color: #fff;
+    }
+    .oauth-btn.github:hover { background: #181a1c; }
+    .oauth-btn.microsoft:hover { background: #113275; }
+    .oauth-logo {
+      width: 1.3em;
+      height: 1.3em;
+      vertical-align: middle;
+      margin-right: 0.18em;
+      filter: none;
+      border-radius: 2px;
+      background: #fff;
+      object-fit: contain;
+      box-shadow: 0 1px 3px rgba(34,55,80,0.06);
+    }
+    .or-divider {
+      margin: 1.2rem 0 0.5rem 0;
+      color: #bbb;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .or-divider::before,
+    .or-divider::after {
+      content: "";
+      display: inline-block;
+      vertical-align: middle;
+      width: 38px;
+      height: 1px;
+      background: #e2e8f0;
+      margin: 0 8px;
+    }
+    .error-msg {
+      color: #c0392b;
+      background: #fff0e2;
+      border: 1px solid #ffdebf;
+      border-radius: 6px;
+      padding: 0.7em 0.5em;
+      font-size: 1.04em;
+      margin-top: 1em;
+      margin-bottom: 0.4em;
+      display: none;
+    }
+    .note {
+      color: #7b7b7b;
+      font-size: 0.96rem;
+      margin-top: 1.1rem;
+    }
+    @media (max-width: 430px) {
+      .login-container { padding: 1.1rem 0.5rem; min-width: unset; max-width: 96vw;}
+      .app-title { font-size: 1.19rem; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="login-container">
+    <div class="app-title">SecurITon Vendor Pricebook</div>
+    <div class="subtitle">Sign in to manage supplier pricing securely</div>
+    <button type="button" id="githubLoginBtn" class="oauth-btn github">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/github.svg" class="oauth-logo" alt="GitHub" />
+      Sign in with GitHub
+    </button>
+    <div class="or-divider">or</div>
+    <button type="button" id="microsoftLoginBtn" class="oauth-btn microsoft">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/microsoft.svg" class="oauth-logo" alt="Microsoft" style="background:#fff;" />
+      Sign in with Microsoft
+    </button>
+    <div id="errorMsg" class="error-msg"></div>
+    <div class="note">SSO is required for all users. <br>Contact admin for access.</div>
+  </div>
+  <script>
+    const SUPABASE_URL = "https://kzbqmgqlgcrooqjbpkyv.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6YnFtZ3FsZ2Nyb29xamJwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0MDc2MzIsImV4cCI6MjA2ODk4MzYzMn0.Jqeb1x8XFdeWc3xGdMR6In_GAjJdXRsTxLN4TDxgO1E";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('githubLoginBtn').onclick = async function() {
+      document.getElementById('errorMsg').style.display = 'none';
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: { redirectTo: window.location.origin + '/pricebook.html' }
+      });
+      if (error) {
+        document.getElementById('errorMsg').textContent = "GitHub SSO failed: " + error.message;
+        document.getElementById('errorMsg').style.display = '';
+      }
+    };
+
+    document.getElementById('microsoftLoginBtn').onclick = async function() {
+      document.getElementById('errorMsg').style.display = 'none';
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: { redirectTo: window.location.origin + '/pricebook.html' }
+      });
+      if (error) {
+        document.getElementById('errorMsg').textContent = "Microsoft SSO failed: " + error.message;
+        document.getElementById('errorMsg').style.display = '';
+      }
+    };
+
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) window.location = 'pricebook.html';
+    })();
+  </script>
+</body>
+</html>
